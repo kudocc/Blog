@@ -1,2 +1,7 @@
 # Using one NSURLSession for every base url
 
+我们项目中使用了AFNetworking，然后做了一层封装，对于每个请求都新建了一个`AFHTTPSessionManager`，我第一次意识到这个有问题是发现了内存泄漏，因为其内部组合了`NSURLSession`，而`NSURLSession`的delegate是retain的，而这个delegate就是`AFHTTPSessionManager`实例，即本身`AFHTTPSessionManager`更准确的说应该是其父类`AFURLSessionManager` 是有循环引用的。
+
+还有一个问题是今早我想到的。我们工程基本上就是一个base url，照理说可以使用HTTP的persistent connections特性的，不过我们工程中每次请求都创建了一个新的NSURLSession对象，我有点怀疑是不是每次发送请求都会重新建立tcp么？我就尝试着抓了一下包，发现每次发送请求都要进行tcp的三次握手，浪费流量、延迟又高。于是我修改代码，使每次请求都用一个`NSURLSession`，再次抓包，发现之后的请求不会重新建立tcp连接了。Done！
+
+修改代码之后的截图：
