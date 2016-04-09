@@ -1,4 +1,4 @@
-# Using one NSURLSession for every base url
+# Use one NSURLSession for every base url
 
 我们项目中使用了AFNetworking，然后做了一层封装，对于每个请求都新建了一个`AFHTTPSessionManager`，我第一次意识到这个有问题是发现了内存泄漏，因为其内部组合了`NSURLSession`，而`NSURLSession`的delegate是retain的，而这个delegate就是`AFHTTPSessionManager`实例，即本身`AFHTTPSessionManager`更准确的说应该是其父类`AFURLSessionManager` 是有循环引用的。
 
