@@ -44,4 +44,4 @@ UIKit的坐标系是Top-Left，向下和向右增加；Quartz的坐标系是Bott
 
 再次运行，第二个图片也正常的绘制出来了。
 
-所以无论在drawRect:中使用Quartz的方法绘制图片、path、或者core text绘制文本，都会被翻转，我们这里要么自己做坐标系的转换，要么使用UIKit的方法。
+所以在drawRect:中使用Quartz的方法绘制时会被翻转，我们这里要么自己做坐标系的转换，要么使用UIKit的方法。
