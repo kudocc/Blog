@@ -44,7 +44,7 @@ UIKit的坐标系是Top-Left，向下和向右增加；Quartz的坐标系是Bott
 
 再次运行，第二个图片也正常的绘制出来了。
 
-最后，放出苹果的一段文档，里面讲了对于Patterns和Shadows做坐标变换是没用的（我这么理解的，要试一下）：
+最后，放出苹果的一段文档，里面讲了对于Patterns和Shadows做坐标变换是没用的：
 
 > Important: The above discussion is essential to understand if you plan to write applications that directly target Quartz on iOS, but it is not sufficient. On iOS 3.2 and later, when UIKit creates a drawing context for your application, it also makes additional changes to the context to match the default UIKIt conventions. In particular, patterns and shadows, which are not affected by the CTM, are adjusted separately so that their conventions match UIKit’s coordinate system. In this case, there is no equivalent mechanism to the CTM that your application can use to change a context created by Quartz to match the behavior for a context provided by UIKit; your application must recognize the what kind of context it is drawing into and adjust its behavior to match the expectations of the context.
 
