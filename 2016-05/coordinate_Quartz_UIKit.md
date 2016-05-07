@@ -50,3 +50,5 @@ UIKit的坐标系是Top-Left，向下和向右增加；Quartz的坐标系是Bott
 
 总结：
 在UIKit创建的CGContextRef中使用Quartz的方法绘制图片、带有arc顺时针、逆时针的path时会被翻转，我们这里要么自己做坐标系的转换，要么使用UIKit的方法(`UIBezierPath`没有做类似`UIImage`的坐标系变换，所以使用它也没用)。
+
+原谅我没有放图片出来，很麻烦啊！！！源码在[这里](https://github.com/kudocc/demo/blob/master/ImageMask/ImageMask/UIViewCordinate.m)
