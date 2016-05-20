@@ -19,6 +19,7 @@ block被看做是一个对象，因为他有isa指针，根据isa指针指向的
 
 Stack->Heap前
 在block的struct内增加一个int类型的值，在block被定义的时候将aInt赋值给struct内的int。
+
 Stack->Heap时
 malloc一个block的内存，直接把栈上的block memcopy过去，over。
 
@@ -26,6 +27,7 @@ malloc一个block的内存，直接把栈上的block memcopy过去，over。
 
 Stack->Heap前
 在block的struct内增加一个NSObject *的变量，在block被定义的时候将obj赋值给struct内的obj。
+
 Stack->Heap时
 因为capture的是一个对象，在转移的时候要retain这个object，所以在block的struct内，会有两个帮助函数（就叫它们object_assign, object_dispose），一个是在block被转移到堆上的时候调用，
 一个在block被释放时调用。
@@ -34,9 +36,7 @@ Stack->Heap时
 ####3. 变量是__block scalar，以`__block int mutableInt`为例
 
 Stack->Heap前
-__block允许我们修改被capture的值，此时我们面临几个问题，首先是被capture的值是在栈上，block的作用域不止在栈上，如果出了栈，再修改
-这个值的时候肯定不可以修改原始的`mutableInt`的地址的值了，所以在转移时一定要把mutableInt也转移到堆上。第二个问题，因为在这个函数中，
-其他地方也可能修改`mutableInt`的值，那这个值在block也要被更改。这里通过增加了一层间接引用来实现。
+__block允许我们修改被capture的值，此时我们面临几个问题，首先是被capture的值是在栈上，block的作用域不止在栈上，如果出了栈，再修改这个值的时候肯定不可以修改原始的`mutableInt`的地址的值了，所以在转移时一定要把mutableInt也转移到堆上。第二个问题，因为在这个函数中，其他地方也可能修改`mutableInt`的值，那这个值在block也要被更改。这里通过增加了一层间接引用来实现。
 第三个问题，可能有第二个block也capture了`mutableInt`，还要保证第二个block对mutableInt的操作反映在其他block中。困难重重。
 苹果是这样做的，她为这个mutableInt实现了一个struct，结构大概是：
 ```
@@ -49,6 +49,7 @@ __block允许我们修改被capture的值，此时我们面临几个问题，首
 首先把栈上的mutableInt使用Ref stack_ref替换，stack_ref.forward = &stack_ref，这个作用域中随后对mutableInt的引用全部使用
 stack_ref.forward->mutableInt来引用。而block中capture的是Ref *pRef，指向了栈上的Ref，即pRef = &stack_ref。block中对mutableInt的
 引用也使用pRef->forward->mutableInt来引用。
+
 Stack->Heap时
 malloc一个block的内存，直接把栈上的block memcopy过去，block中还有两个帮助函数，类似capture对象的情况，不过此时做的操作不同，不是
 retain对象，而是malloc一块Ref的内存，生成heap_ref，将heap_ref->mutableInt = pRef->forward->mutableInt; heap_ref->forward = &heap_ref;
