@@ -34,13 +34,11 @@ __block允许我们修改被capture的值，此时我们面临几个问题，首
 其他地方也可能修改`mutableInt`的值，那这个值在block也要被更改。这里通过增加了一层间接引用来实现。
 第三个问题，可能有第二个block也capture了`mutableInt`，还要保证第二个block对mutableInt的操作反映在其他block中。困难重重。
 苹果是这样做的，她为这个mutableInt实现了一个struct，结构大概是：
-```
-struct {
-  Ref *forward;
-  int flags;
-  int mutableInt;
-} Ref
-```
+   struct {
+     Ref *forward;
+     int flags;
+     int mutableInt;
+   } Ref
 首先把栈上的mutableInt使用Ref stack_ref替换，stack_ref.forward = &stack_ref，这个作用域中随后对mutableInt的引用全部使用
 stack_ref.forward->mutableInt来引用。而block中capture的是Ref *pRef，指向了栈上的Ref，即pRef = &stack_ref。block中对mutableInt的
 引用也使用pRef->forward->mutableInt来引用。
