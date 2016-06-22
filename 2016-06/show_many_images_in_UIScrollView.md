@@ -4,7 +4,7 @@
 
 假如让你来实现一个展示图片消息的cell，图片需要带圆角，相信最直观的想法就是直接将图片放到`UIImageView`中，然后设置其`layer`的`cornerRadius`和`masksToBounds`属性，但是这样做就导致了刚刚提到的问题，卡顿，滑动时严重掉帧。
 
-今天我想说一下我是如何解决这个问题的，我想在给出所谓的best practice之前，先给出几个例子来看一下这些不同的方法在滚动时的帧率。用来测试的机器是我的iPhone4，系统是7.1.2，之所以使用旧设备是为了让效果更明显，测试帧率的方法是使用Profiling中的Core Animation。
+今天我想说一下我是如何解决这个问题的，我想在给出所谓的best practice之前，先给出几个例子来看一下这些不同的方法在滚动时的帧率。用来测试的机器是我的iPhone4，系统是7.1.2，之所以使用旧设备是为了让效果更明显，测试帧率的方法是使用Profiling中的Core Animation。 
 
 我先准备了11张图片，图片有大有小，最小的也要超过150 * 150像素，最大的可能超过1000 * 768像素。我会创建一个UITableView，在每个cell中放置三张相同的图片，之所以使用三张图片而不是一张也是为了让测试效果更加明显。为了能尽情的滚动，方便检测FPS，我把numberOfRows设置成了400。每个图片的宽度*高度是66 * 66 point，它们都是小于转换成point后的图片尺寸的。
 
@@ -30,7 +30,7 @@ FPS可以达到55以上，效果还是不错的，毕竟使用drawRect主要是�
 
 ### 3. 裁剪图片到66*66，并设置layer.cornerRadius和masksToBounds
 
-FPS基本上在23上下，效果很差，之所以会导致帧率下降的如此厉害主要是这两个属性会导致离屏渲染
+FPS基本上在23上下，效果很差，之所以会导致帧率下降的如此厉害主要是这两个属性会导致离屏渲染。离屏渲染(offscreen rending)在2011年的WWDC中的Session 121 Understanding UIKit Rendering有提到过，如果发生离屏渲染，会导致Core Animation创建额外的缓冲区，被称作offscreen buffer，然后在offscreen buffer中绘制图片，然后在将结果渲染到onscreen buffer中。这里产生了额外的内存创建、额外的绘制操作、还有onscreen和offscreen的切换，所以离屏渲染产生时我们的帧率下降的非常明显。
 
 ### 4. 裁剪图片到66*66，clip掉图片的圆角区域
 
