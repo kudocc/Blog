@@ -9,4 +9,4 @@
 4. [Show many images in UIScrollView](https://github.com/kudocc/blog/blob/master/2016-06/show_many_images_in_UIScrollView.md) 讨论了在UITableView等UIScrollView中展示大量图片时如何避免卡顿
 
 
-如果有什么问题请联系我 [cangmuma@126.com](cangmuma@126.com)
+如果有什么问题请联系我 <cangmuma@126.com>
