@@ -14,7 +14,7 @@
 - 1. 使用原图；
 - 2. 事先将图片大小变成66 * 66，再进行绘制；
 - 3. 事先将图片大小变成66 * 66，然后设置UIView的layer.cornerRadius和masksToBounds来实现圆角效果；
-- 4. 事先处理图片，将图片大小变成66 * 66并且clip掉圆角区域，即使修改图片本身使其带有圆角。
+- 4. 事先处理图片，将图片大小变成66 * 66并且clip掉圆角区域，也就是修改图片本身使其看起来带有圆角。
 
 ## 在UIView上绘制图片
 
@@ -46,7 +46,7 @@ FPS在55以上，可以想象得到其与第二个case是一样的，他们都�
 
 ### 2. 裁剪图片到66*66
 
-与case差不多，我觉得UIImageView内部其实也将图片做了裁剪吧，如果让我自己来实现UIImageView的话，因为图片可能远远大于UIImageView的bounds.size，在bounds之外的内容不展示的情况下，我想也没有必要把整个图片都提交到GPU吧。
+与case1差不多，我觉得UIImageView内部其实也将图片做了裁剪吧，如果让我自己来实现UIImageView的话，因为图片可能远远大于UIImageView的bounds.size，在bounds之外的内容不展示的情况下，我想也没有必要把整个图片都提交到GPU吧。
 
 ### 3. 裁剪图片到66*66，并设置layer.cornerRadius和masksToBounds
 
