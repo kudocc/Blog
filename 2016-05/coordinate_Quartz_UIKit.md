@@ -57,18 +57,20 @@ y' = b * x + d * y + ty;
 为什么`CGContextScaleCTM`中原来的矩阵是在乘号的左边，而在`CGContextTranslateCTM`中则是右边？`CGContextScaleCTM`的目的是更改scale的值，即a和d，不能改动其他的值，而`CGContextTranslateCTM`的目的是更改tx和ty，同时保持其他值不变。
 
 假如调用`CGContextScaleCTM(context, Sx, Sy)`，原来的矩阵是[a, b, 0, c, d, 0, tx, ty, 1]，方法调用完后得到矩阵[a*Sx, b*Sy, 0, c*Sx, d*Sy, 0, tx*Sx, ty*Sy, 1]，之前x'和y'的公式则变成了
-
+```
 x' = a*Sx * x + c*Sx * y + tx*Sx;
 y' = b*Sy * x + d*Sy * y + ty*Sy;
-
+```
 提出Sx和Sy，则变成：
+```
 x' = Sx(a * x + c * y + tx);
 y' = Sy(b * x + d * y + ty);
+```
 是不是很神奇，原谅我线性代数都忘光了，也许你认为是理所当然的吧。我们继续分析`CGContextTranslateCTM`。
 
 假如调用`CGContextTranslateCTM(context, Tx, Ty)`，原来的矩阵还是[a, b, 0, c, d, 0, tx, ty, 1]，方法调用完后得到矩阵[a, b, 0, c, d, 0, a*Tx+c*Ty+tx, b*Tx+d*Ty+ty, 1]，之前x', y'的公式变成了
-
+```
 x' = a * x + c * y + a*Tx+c*Ty+tx;
 y' = b * x + d * y + b*Tx+d*Ty+ty;
-
+```
 确实也只改变了平移的部分。如果有什么不明白的地方请前去阅读线性代数，如有问题请联系我，不得不感慨数学真是奇妙啊，我也晕了~
