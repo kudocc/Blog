@@ -1,4 +1,4 @@
-# Coordinate
+# Coordinate Quartz UIKit
 
 坐标系一直是我头痛的问题，在多年以前看Quartz 2D Programming Guide的时候就比较懵逼，当时貌似研究了一阵子似乎是懂了但是其实应该还是云里雾里吧，至于我后来都忘了当时的思考与结论。坐标系复杂是因为UIKit和Quartz中的API使用的是不同的坐标系。UIKit零点在左上角，Y轴向下增长；Quartz的零点是在左下角，Y轴向上增长，所以使用Quartz的api的时候都要做坐标变换。
 
@@ -30,11 +30,45 @@ CGContextAddLineToPoint(context, 100, 100);
 
 那么UIImage的方法为什么可以正确绘制？我觉得在其内部进行了矩阵变换，我用代码模拟了一下。
 ```
-    CGContextSaveGState(context);
-    // 恢复成Quartz的矩阵变换
-    CGContextScaleCTM(context, 1.0, -1.0);
-    CGContextTranslateCTM(context, 0, -self.size.height);
-    CGContextDrawImage(context, CGRectMake(0, self.size.height-image.size.height, image.size.width, image.size.height), image.CGImage);
-    CGContextRestoreGState(context);
+CGContextSaveGState(context);
+// 恢复成Quartz的矩阵变换
+CGContextScaleCTM(context, 1.0, -1.0);
+CGContextTranslateCTM(context, 0, -self.size.height);
+CGContextDrawImage(context, CGRectMake(0, self.size.height-image.size.height, image.size.width, image.size.height), image.CGImage);
+CGContextRestoreGState(context);
 ```
-代码的思路是将UIKit的矩阵变换恢复成Quartz的矩阵变换，然后在Quartz中计算位置来绘制图片。
+代码的思路是将UIKit的矩阵变换恢复成Quartz的矩阵变换，然后在Quartz中计算位置来绘制图片。那么我怎么就知道要这么做变换呢？怎么说呢，其实是试出来的。
+
+变换矩阵是3*3的矩阵，[a, b, 0, c, d, 0, tx, ty, 1]，这里不方便写成矩阵，我就按照从每行开始向后排列的顺序列出来这个矩阵。
+(x', y', 1) = (x, y, 1) * [a, b, 0, c, d, 0, tx, ty, 1]
+
+x' = a * x + c * y + tx;
+y' = b * x + d * y + ty;
+
+在我们的例子中，UIKit的drawRect:方法中拿到的context的变换矩阵是[2, 0, 0, -2, 0, 1206]，将这个矩阵应用矩阵变换`CGContextScaleCTM(context, 1.0, -1.0);`之后的结果是[2, 0, 0, 2, 0, 1206]，
+因为文档中没有说明这个方法内部是如何实现的矩阵变换，我们从结果推导过程，从结果来看应该是矩阵[2, 0, 0, -2, 0, 1206] * [1, 0, 0, 0, -1, 0, 0, 0, 1]得到的值；
+
+接着我们再次应用矩阵变换`CGContextTranslateCTM(context, 0, -self.size.height);`，打印出结果是[2, 0, 0, 2, 0, 0]，继续推导过程是：[2, 0, 0, 2, 0, 1206] * [1, 0, 0, 0, 1, 0, 0, -1206, 1]这两个矩阵相乘得到的。
+
+由此可知:
+`CGContextScaleCTM(context, 1.0, -1.0)` 是将原来的变换矩阵 * [1, 0, 0, 0, -1, 0, 0, 0, 1]；
+`CGContextTranslateCTM(context, 0, -self.size.height);` 是将[1, 0, 0, 0, 1, 0, 0, -1206, 1] * 原来的变换矩阵；
+
+为什么`CGContextScaleCTM`中原来的矩阵是在乘号的左边，而在`CGContextTranslateCTM`中则是右边？`CGContextScaleCTM`的目的是更改scale的值，即a和d，不能改动其他的值，而`CGContextTranslateCTM`的目的是更改tx和ty，同时保持其他值不变。
+
+假如调用`CGContextScaleCTM(context, Sx, Sy)`，原来的矩阵是[a, b, 0, c, d, 0, tx, ty, 1]，方法调用完后得到矩阵[a*Sx, b*Sy, 0, c*Sx, d*Sy, 0, tx*Sx, ty*Sy, 1]，之前x'和y'的公式则变成了
+
+x' = a*Sx * x + c*Sx * y + tx*Sx;
+y' = b*Sy * x + d*Sy * y + ty*Sy;
+
+提出Sx和Sy，则变成：
+x' = Sx(a * x + c * y + tx);
+y' = Sy(b * x + d * y + ty);
+是不是很神奇，原谅我线性代数都忘光了，也许你认为是理所当然的吧。我们继续分析`CGContextTranslateCTM`。
+
+假如调用`CGContextTranslateCTM(context, Tx, Ty)`，原来的矩阵还是[a, b, 0, c, d, 0, tx, ty, 1]，方法调用完后得到矩阵[a, b, 0, c, d, 0, a*Tx+c*Ty+tx, b*Tx+d*Ty+ty, 1]，之前x', y'的公式变成了
+
+x' = a * x + c * y + a*Tx+c*Ty+tx;
+y' = b * x + d * y + b*Tx+d*Ty+ty;
+
+确实也只改变了平移的部分。如果有什么不明白的地方请前去阅读线性代数，如有问题请联系我，不得不感慨数学真是奇妙啊，我也晕了~
