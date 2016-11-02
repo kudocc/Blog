@@ -24,11 +24,10 @@ CGContextAddLineToPoint(context, 100, 100);
 
 要说明为什么要使用`UIImage`的绘制方法，就先说明为什么不使用`CGContextDrawImage`，那么做个图试试不就知道了么，下面的代码会画一个图：
 `CGContextDrawImage(context, CGRectMake(0, 0, imageWidth, imageHeight), image.CGImage);`
-这个方法会在`UIView`的左上角绘制图片，关于这个位置的变换我刚刚讨论过了，可以肯定确实图片出现在了那里！但是等等，你会发现图片是倒过来的！！！为什么会这样？
+这个方法会在`UIView`的左上角绘制图片，关于这个位置的变换我刚刚讨论过了，可以肯定确实图片出现在了那里！但是等等，你会发现图片是倒过来的！！！
 
-考虑绘制过程，我们使用的是Quartz的方法绘制的，所以绘制是在Quartz的坐标系进行的，假如这个图是人的肖像图，那么y轴为0的这个位置大约是下巴这里，而y轴在imageHeight的位置大约是头发的位置，别忘记矩阵变换，在绘制前应用了矩阵变换，那么Quartz上y轴为0在变换后会变成1006这个位置，而y轴为imageHeight（point为200，pixel为400）则变成了606，所以头发在下面，下巴在上面，图片当然就倒过来了。
+我们传入的参数CGRect参数无疑会被正确转换，所以图片绘制的位置是正确的，至于图片为什么会倒转，这与CGContextDrawImage的内部实现相关，当然我们如果一定要使用`CGContextDrawImage`来绘制，那么也没问题，只需要将变换矩阵恢复，然后计算好本应该绘制到的位置就可以了。就像下面这样：
 
-那么UIImage的方法为什么可以正确绘制？我觉得在其内部进行了矩阵变换，我用代码模拟了一下。
 ```
 CGContextSaveGState(context);
 // 恢复成Quartz的矩阵变换
@@ -37,7 +36,6 @@ CGContextTranslateCTM(context, 0, -self.size.height);
 CGContextDrawImage(context, CGRectMake(0, self.size.height-image.size.height, image.size.width, image.size.height), image.CGImage);
 CGContextRestoreGState(context);
 ```
-代码的思路是将UIKit的矩阵变换恢复成Quartz的矩阵变换，然后在Quartz中计算位置来绘制图片。那么我怎么就知道要这么做变换呢？那我就要说说线性代数的知识了。
 
 变换矩阵是3*3的矩阵，[a, b, 0, c, d, 0, tx, ty, 1]，这里不方便写成矩阵，我就按照从每行开始向后排列的顺序列出来这个矩阵。一个点(x, y)应用了矩阵变化之后变成了(x', y')，公式是下面这样：(x', y', 1) = (x, y, 1) * [a, b, 0, c, d, 0, tx, ty, 1]
 ```
@@ -73,4 +71,4 @@ y' = Sy(b * x + d * y + ty);
 x' = a * x + c * y + a*Tx+c*Ty+tx;
 y' = b * x + d * y + b*Tx+d*Ty+ty;
 ```
-确实也只改变了平移的部分。如果有什么不明白的地方请前去阅读线性代数，如有问题请联系我。
+确实也只改变了平移的部分。
