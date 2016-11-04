@@ -24,3 +24,7 @@
     transform = CGAffineTransformScale(transform, 1, -1);
     frame = CGRectApplyAffineTransform(frame, transform);
 ```
+
+可能有点乱，但其实只需要掌握一条原则，就是调用CGContextXXX的方法时，需要明白当前的CTM是什么，然后就以这个坐标系来计算绘制图形的位置；而调用UIKit的方法时，因为我们不知道其在内部做过什么处理，最稳妥的方式就是将CTM变成UIKit的CTM。
+
+文中提到的Core Text的使用可以在[这里](https://github.com/kudocc/CCKit/blob/master/CCKit/text/CCTextLayout.m)找到。
