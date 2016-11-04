@@ -4,11 +4,14 @@
 
 ## Current Transform Matrix
 
-无论是UIKit还是Quartz的坐标系其实都是user space坐标系，就是我们自己定义的坐标系，而图像真正展示在设备上，我们需要将user space坐标转换成设备坐标，这个工作就是通过current transform matrix (CTM)来做的。我们首先说说这个user space坐标系的作用：
+无论是UIKit还是Quartz的坐标系其实都是user space坐标系，就是我们自己定义的坐标系。为什么不直接使用一个自己定义的坐标系而不使用设备的坐标系呢？
+我们首先说说这个user space坐标系的作用：
+
 1. 它为我们增加了一层抽象，我们可以使用统一的单位来开发，但是在不同的屏幕上可能产生不同的像素数。我们平时开发的时候坐标单位都是点(point)，实际苹果绘制图片的时候都是以像素为单位，但是因为设备不同，一个点对应的像素是不同的，iPhone3gs是一个点对应1个像素，而iPhone4是2*2个像素，如果我们写代码的时候使用的是像素，那就麻烦很多，比如我们要画一条线到屏幕中间，那在3gs上就是画到160位置，而4上就是320的位置，6Plus上就是480...总之使用point隐藏了设备的分辨率，虽然不同分辨率的设备上的宽高比也不同，但是起码不会差别太大。
+
 2. 第二个是我们可以通过对坐标系做变换，达到让绘制的图形变换的效果。比如可以通过让坐标系转45度，让用相同代码绘制的图片旋转45读。
 
-CTM是一个`CGAffineTransform`类型的值，其是一个3*3的矩阵，其最后一列是固定的，所以我这里不会表示出来，我们这样表示这个`CGAffineTransform`:[x00, x01, x10, x11, x20, x21]，下标第一位表示行号，第二位表示列号。
+图像真正展示在设备上，我们需要将user space坐标转换成设备坐标，这个工作就是通过current transform matrix (CTM)来做的：CTM是一个`CGAffineTransform`类型的值，其是一个3*3的矩阵，其最后一列是固定的，所以我这里不会表示出来，我们这样表示这个`CGAffineTransform`:[x00, x01, x10, x11, x20, x21]，下标第一位表示行号，第二位表示列号。
 
 在我们做绘制时，先要搞清楚的是所在的上下文，即CGContextRef，或者更具体的说是CTM。UIKit的CTM是[scale, 0, 0, -scale, 0, height]，scale就是方法`[UIScreen mainScreen].scale`的值，height就是这个context的高度(其实UIKit中的CTM是被处理过的，如果我们手动创建一个位图context，然后查看其CTM，会发现其值为`CGAffineTransformIdentity`([1, 0, 0, 1, 0, 0]))。正是因为这个CTM，所以我们的绘制时使用的位置可以用UIKit的坐标系来解释。
 
