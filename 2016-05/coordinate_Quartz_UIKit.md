@@ -15,7 +15,7 @@
 
 在我们做绘制时，先要搞清楚的是所在的上下文，即CGContextRef，或者更具体的说是CTM。UIKit的CTM是[scale, 0, 0, -scale, 0, height]，scale就是方法`[UIScreen mainScreen].scale`的值，height就是这个context的高度(其实UIKit中的CTM是被处理过的，如果我们手动创建一个位图context，然后查看其CTM，会发现其值为`CGAffineTransformIdentity`([1, 0, 0, 1, 0, 0]))。正是因为这个CTM，所以我们的绘制时使用的位置可以用UIKit的坐标系来解释。
 
-为什么CTM是这个值就能将UIKit的坐标正确转换成设备相关的坐标，比如我们绘制一个UIView在iPhone6上，宽高是100*200，使用UIKit坐标系的(0，10)上画一个点，实际上应该在(0, 380)的地方绘制，你可以自己手动将(0, 10, 0)应用[2, 0, 2, -2, 0, 200]，看一下结果是否是这样。
+为什么CTM是这个值就能将UIKit的坐标正确转换成设备相关的坐标，比如我们绘制一个UIView在iPhone6上，宽高是100*200，使用UIKit坐标系的(0，10)上画一个点，实际上应该在(0, 380)的地方绘制，你可以自己手动将(0, 10, 1)应用[2, 0, 2, -2, 0, 200]，看一下结果是否是(0, 380, 1)。
 
 举一个例子，在iPhone6设备上，覆盖一个UIView的`-drawRect`方法，UIView的长*宽是100*200，绘制一个矩形`CGContextFillRect(context, CGRectMake(0, 0, 10, 10));`，我们认为这个图会被绘制在`UIView`的左上角验证x轴向右，y轴向下分别20个像素的位置。我们知道`CGContextXXX`方法属于Quartz，他们使用的坐标系是y轴向上的，如果此时的CTM是值为`CGAffineTransformIdentity`，那么这个操作会绘制在UIView的左下角，沿着x轴向右，y轴向上10个像素的位置。因为有CTM，`CGRectMake(0, 0, 10, 10)`变成了`CGRectMake(0, 400, 20, 20)`，这个值就是以像素为单位的真实的设备相关坐标。
 
