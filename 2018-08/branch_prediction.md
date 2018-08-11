@@ -1,6 +1,6 @@
-#分支预测
+# 分支预测
 
-### Static branch prediction & dynamic branch prediction
+### static branch prediction & dynamic branch prediction
 
 如果CPU没有足够信息，那么会使用static branch prediction，我认为dynamic xx是用在循环中的，如果是if else这种，应该只使用static xx.
 
@@ -15,6 +15,8 @@ Forward branch 是地址在前的分支，默认不会跳转；如果地址在�
 
 
 ### long __builtin_expect（long, long) 
+
+分支预测是处理器的行为，__builtin_expect只是改变了编译器如何生成汇编代码，之所以可以work是因为刚刚讨论的static branch predition的一般规则。
 
 在dispatch_once的源码中使用过这个方法，它用来告诉编译器生成什么样的代码，基于之前的讨论，
 
