@@ -6,8 +6,8 @@
 
 Static branch prediction 的规则是依赖于处理器的，一般的规则:
 
-1. A forward branch defaults to not taken 
-2. A backward branch defaults to taken
+1. A forward branch defaults to not taken
+2. A backward branch defaults to taken (A backward branch is one that has a target address that is lower than its own address)
 
 Forward branch 是地址在前的分支，默认不会跳转；如果地址在后的分支，默认跳转。[见wiki](https://en.wikipedia.org/wiki/Branch_predictor)
 
@@ -22,11 +22,11 @@ Forward branch 是地址在前的分支，默认不会跳转；如果地址在�
 
 ```
 If (__builtin_expect(x, 1)) {
-// xxxx
+    xxxx
 }
 ```
 
-会认为x的值很可能是1，返回值也是1，则需要进入循环，那么编译器生成的汇编会把 xxxx 生成指令 在紧挨着 条件判断的代码后，这样static branch prediction会让其进入xxxx。
+会认为x的值很可能是1，返回值也是1，则需要进入循环，那么编译器生成的汇编会把 xxxx 生成指令 在紧挨着条件判断(jmp)的代码后，跳转的地址在更高的地址处，属于forward branch，不taken，这样static branch prediction会让其进入xxxx。
 
 
 一些看过的链接，随便贴贴
