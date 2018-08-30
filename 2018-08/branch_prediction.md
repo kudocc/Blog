@@ -28,6 +28,78 @@ If (__builtin_expect(x, 1)) {
 
 会认为x的值很可能是1，返回值也是1，则需要进入循环，那么编译器生成的汇编会把 xxxx 生成指令 在紧挨着条件判断(jmp)的代码后，跳转的地址在更高的地址处，属于forward branch，不taken，这样static branch prediction会让其进入xxxx。
 
+```
+#define likely(x)    __builtin_expect(!!(x), 1)
+#define unlikely(x)  __builtin_expect(!!(x), 0)
+
+int main(int argc, char *argv[])
+{
+    int a;
+    
+    /* Get the value from somewhere GCC can't optimize */
+    a = atoi (argv[1]);
+    
+    if (likely (a == 2))
+        a++;
+    else
+        a--;
+    
+    return a;
+}
+
+gcc xxx -O2
+
+a.out:
+(__TEXT,__text) section
+_main:
+0000000100000f70	pushq	%rbp
+0000000100000f71	movq	%rsp, %rbp
+0000000100000f74	movq	0x8(%rsi), %rdi
+0000000100000f78	xorl	%eax, %eax
+0000000100000f7a	callq	0x100000f96
+0000000100000f7f	movl	$0x1, %ecx
+0000000100000f84	cmpl	$0x2, %eax
+0000000100000f87	jne	0x100000f8f
+0000000100000f89	addl	%eax, %ecx
+0000000100000f8b	movl	%ecx, %eax
+0000000100000f8d	popq	%rbp
+0000000100000f8e	retq
+0000000100000f8f	movl	$0xffffffff, %ecx
+0000000100000f94	jmp	0x100000f89
+```
+
+```
+int main(int argc, char *argv[])
+{
+    int a;
+    
+    /* Get the value from somewhere GCC can't optimize */
+    a = atoi (argv[1]);
+    
+    if (unlikely (a == 2))
+        a++;
+    else
+        a--;
+    
+    return a;
+}
+
+_main:
+0000000100000f70	pushq	%rbp
+0000000100000f71	movq	%rsp, %rbp
+0000000100000f74	movq	0x8(%rsi), %rdi
+0000000100000f78	xorl	%eax, %eax
+0000000100000f7a	callq	0x100000f96
+0000000100000f7f	cmpl	$0x2, %eax
+0000000100000f82	je	0x100000f8f
+0000000100000f84	movl	$0xffffffff, %ecx
+0000000100000f89	addl	%eax, %ecx
+0000000100000f8b	movl	%ecx, %eax
+0000000100000f8d	popq	%rbp
+0000000100000f8e	retq
+0000000100000f8f	movl	$0x1, %ecx
+0000000100000f94	jmp	0x100000f89
+```
 
 一些看过的链接，随便贴贴
 
